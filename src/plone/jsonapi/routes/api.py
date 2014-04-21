@@ -8,6 +8,8 @@ from plone.jsonapi.core import router
 from Products.CMFCore.interfaces import ISiteRoot
 from Products.ZCatalog.interfaces import ICatalogBrain
 from Products.ATContentTypes.interfaces import IATContentType
+from plone.dexterity.interfaces import IDexterityContent
+from plone.dexterity.utils import getAdditionalSchemata
 
 # request helpers
 from plone.jsonapi.routes.request import get_sort_limit
@@ -287,6 +289,9 @@ def get_schema(obj):
     fti = pt.getTypeInfo(obj.portal_type)
     return fti.lookupSchema()
 
+def get_behaviors_schema(obj):
+    return list(getAdditionalSchemata(obj))
+
 def get_object(brain_or_object):
     """ return the referenced object """
     if not ICatalogBrain.providedBy(brain_or_object):
@@ -373,9 +378,21 @@ def update_object_with_data(content, record):
     """
     schema = get_schema(content)
     is_atct = IATContentType.providedBy(content)
+    is_dext = IDexterityContent.providedBy(content)
 
     for k, v in record.items():
-        field = schema.get(k)
+
+        if is_atct:
+            field = schema.get(k)
+
+        if is_dext:
+            schemas = list()
+            schemas.append(schema)
+            schemas.extend(get_behaviors_schema(content))
+            for i in schemas:
+                field = i.get(k)
+                if field:
+                    break
 
         logger.info("update_object_with_data::processing key=%r, value=%r, field=%r", k, v, field)
         if field is None:
@@ -393,3 +410,4 @@ def update_object_with_data(content, record):
     return content
 
 # vim: set ft=python ts=4 sw=4 expandtab :
+

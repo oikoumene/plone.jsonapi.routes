@@ -135,10 +135,16 @@ def get_value(field):
 def get_file_dict(field):
     """ file representation of the given data
     """
+    if hasattr(field, 'content_type'):
+        file_content_type = field.content_type
+
+    if hasattr(field, 'contentType'):
+        file_content_type = field.contentType
+
     return {
         "data": field.data.encode("base64"),
         "size": len(field.data),
-        "content_type": field.content_type
+        "content_type": file_content_type
     }
 
 

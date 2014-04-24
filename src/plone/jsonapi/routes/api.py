@@ -22,6 +22,11 @@ from plone.jsonapi.routes.request import get_request_data
 from plone.jsonapi.routes.interfaces import IInfo
 
 from plone.jsonapi.routes import underscore as _
+from plone.app.dexterity.behaviors.metadata import ICategorization
+from plone.namedfile.interfaces import INamedBlobFileField
+from plone.namedfile import NamedBlobFile
+from base64 import b64decode
+
 
 logger = logging.getLogger("plone.jsonapi.routes")
 
@@ -404,7 +409,19 @@ def update_object_with_data(content, record):
             mutator = field.getMutator(content)
             mutator(v)
         else:
-            setattr(content, k, v)
+            #ugly hack for tags
+            if ICategorization is field.interface:
+                content.setSubject(v)
+            elif INamedBlobFileField.providedBy(field):
+                filename = v.get("filename")
+                data = b64decode(v.get("data"))
+                file_obj = NamedBlobFile(data, filename=filename)
+                field.validate(file_obj)
+                field.set(content, file_obj)
+
+            else:
+                field.validate(v)
+                field.set(content, v)
 
     content.reindexObject()
     return content

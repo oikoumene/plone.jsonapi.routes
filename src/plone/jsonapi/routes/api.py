@@ -25,6 +25,7 @@ from plone.jsonapi.routes import underscore as _
 from plone.app.dexterity.behaviors.metadata import ICategorization
 from plone.namedfile.interfaces import INamedBlobFileField
 from plone.namedfile import NamedBlobFile
+from plone.app.dexterity.behaviors.metadata import IPublication
 from base64 import b64decode
 
 
@@ -412,6 +413,13 @@ def update_object_with_data(content, record):
             #ugly hack for tags
             if ICategorization is field.interface:
                 content.setSubject(v)
+
+            elif IPublication is field.interface:
+                if k == u'effective':
+                    content.setEffectiveDate(v)
+                elif k == u'expires':
+                    content.setExpirationDate(v)
+
             elif INamedBlobFileField.providedBy(field):
                 filename = v.get("filename")
                 data = b64decode(v.get("data"))

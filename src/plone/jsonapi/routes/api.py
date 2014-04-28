@@ -27,6 +27,9 @@ from plone.namedfile.interfaces import INamedBlobFileField
 from plone.namedfile import NamedBlobFile
 from plone.app.dexterity.behaviors.metadata import IPublication
 from base64 import b64decode
+from AccessControl import getSecurityManager
+from AccessControl import Unauthorized
+from Products.CMFCore import permissions
 
 
 logger = logging.getLogger("plone.jsonapi.routes")
@@ -101,6 +104,9 @@ def update_items(portal_type, request, uid=None, endpoint=None):
     results = []
     for obj in objects:
         # get the update dataset for this object
+        gsm = getSecurityManager()
+        if not gsm.checkPermission(permissions.ModifyPortalContent, obj):
+            raise Unauthorized("You may not modify this object")
 
         if uid:
             record = records and records[0] or {}

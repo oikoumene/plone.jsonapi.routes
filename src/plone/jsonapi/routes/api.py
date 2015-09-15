@@ -23,15 +23,13 @@ from plone.jsonapi.routes.interfaces import IInfo
 
 from plone.jsonapi.routes import underscore as _
 from plone.app.dexterity.behaviors.metadata import ICategorization
-from plone.namedfile.interfaces import INamedBlobFileField,INamedBlobImageField
-from plone.namedfile import NamedBlobFile, NamedBlobImage
+from plone.namedfile.interfaces import INamedBlobFileField
+from plone.namedfile import NamedBlobFile
 from plone.app.dexterity.behaviors.metadata import IPublication
 from base64 import b64decode
 from AccessControl import getSecurityManager
 from AccessControl import Unauthorized
 from Products.CMFCore import permissions
-
-from plone.app.contenttypes.behaviors.leadimage import ILeadImage
 
 
 logger = logging.getLogger("plone.jsonapi.routes")
@@ -427,13 +425,6 @@ def update_object_with_data(content, record):
                     content.setEffectiveDate(v)
                 elif k == u'expires':
                     content.setExpirationDate(v)
-
-            elif INamedBlobImageField.providedBy(field):
-                filename = v.get("filename")
-                data = b64decode(v.get("data"))
-                file_obj = NamedBlobImage(data,filename=filename)
-                field.validate(file_obj)
-                field.set(content, file_obj)
 
             elif INamedBlobFileField.providedBy(field):
                 filename = v.get("filename")
